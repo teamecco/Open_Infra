@@ -1,0 +1,183 @@
+Version: v1
+kind: List
+items:
+- apiVersion: apps/v1beta1
+  kind: StatefulSet
+  metadata:
+    ### application and namespace name
+    name: {{ appName }}
+    namespace: {{ projectName }}
+    labels:
+    {%- for label in labels %}
+      {{ label.key }}: {{ label.value }}
+    {%- endfor %}
+  spec:
+    ### replicas
+    replicas: {{ replicas }}
+    selector:
+      matchLabels:
+        task: {{ appName }}
+    updateStrategy:
+      type: {{ updateStrategy }}
+    serviceName: {{ appName }}
+    template:
+      metadata:
+        labels:
+          task: {{ appName }}
+      spec:
+        ### node selector
+        nodeSelector:
+        {%- for selector in nodeSelectors %}
+          {{ selector.key }}: {{ selector.value }}
+        {%- endfor %}
+        imagePullSecrets:
+        - name: accordion-docker-registry
+        containers:
+        ##### app container (don't change name) #####
+        - name: app
+          image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.2
+          imagePullPolicy: Always
+          ### command and args
+          command: [{%- if commands|length == 0 %}{%- endif %}{%- for command in commands %}"{{ command }}"{{ "," if not loop.last }}{%- endfor %}]
+          args: [{%- if arguments|length == 0 %}{%- endif %}{%- for argument in arguments %}"{{ argument }}"{{ "," if not loop.last }}{%- endfor %}]
+          ### ports
+          ports:
+          {%- if containerPorts|length == 0 %}
+          - name: db
+            containerPort: 9200
+            protocol: TCP
+          - name: transport
+            containerPort: 9300
+            protocol: TCP
+          {%- endif %}
+          {%- for port in containerPorts %}
+          - name : {{ port.name }}
+            containerPort: {{ port.targetPort }}
+            protocol: {{ port.protocol }}
+          {%- endfor %}
+          ### environment variables
+          env:
+          {%- for env in environments %}
+          - name: {{ env.name }}
+            value: {{ env.value }}
+          {%- endfor %}
+          ### resource quota
+          resources:
+            requests:
+              cpu: {{ requestCPU }}
+              memory: {{ requestMEM }}
+              {%- if hasGpu %}
+              nvidia.com/gpu: {{ requestGPU }}
+              {%- endif %}
+            limits:
+              cpu: {{ limitCPU }}
+              memory: {{limitMEM }}
+              {%- if hasGpu %}
+              nvidia.com/gpu: {{ limitGPU }}
+              {%- endif %}
+          ### liveness probe
+          {%- if livenessType != 'NoneType' %}
+          livenessProbe:
+            {%- if livenessType == 'ExecType' %}
+            exec:
+              command:
+              {%- for command in livenessExecCommand %}
+              - {{ command }}
+              {%- endfor %}
+            {%- elif livenessType == 'httpGetType' %}
+            httpGet:
+              scheme: {{ livenessHttpGetScheme }}
+              port: {{ livenessHttpGetPort }}
+              path: {{ livenessHttpGetPath }}
+              httpHeaders:
+              {%- for header in livenessHttpGetHeaders %}
+              - name: {{ header.name }}
+                value: {{ header.value }}
+              {%- endfor %}
+            {%- elif livenessType == 'tcpSocketType' %}
+            tcpSocket:
+              port: {{ livenessTcpSocketPort }}
+            {%- endif %}
+            initialDelaySeconds: {{ livenessInitialDelaySeconds }}
+            timeoutSeconds : {{ livenessTimeoutSeconds }}
+            periodSeconds: {{ livenessPeriodSeconds }}
+            successThreshold : {{ livenessSuccessThreshold }}
+            failureThreshold : {{ livenessFailureThreshold }}
+          {%- endif %}
+          ### readness probe
+          {%- if readinessType != 'NoneType' %}
+          readinessProbe:
+            {%- if readinessType == 'ExecType' %}
+            exec:
+              command:
+              {%- for command in readinessExecCommand %}
+              - {{ command }}
+              {%- endfor %}
+            {%- elif readinessType == 'httpGetType' %}
+            httpGet:
+              scheme: {{ readinessHttpGetScheme }}
+              port: {{ readinessHttpGetPort }}
+              path: {{ readinessHttpGetPath }}
+              httpHeaders:
+              {%- for header in readinessHttpGetHeaders %}
+              - name: {{ header.name }}
+                value: {{ header.value }}
+              {%- endfor %}
+            {%- elif readinessType == 'tcpSocketType' %}
+            tcpSocket:
+              port: {{ readinessTcpSocketPort }}
+            {%- endif %}
+            initialDelaySeconds: {{ readinessInitialDelaySeconds }}
+            timeoutSeconds : {{ readinessTimeoutSeconds }}
+            periodSeconds: {{ readinessPeriodSeconds }}
+            successThreshold : {{ readinessSuccessThreshold }}
+            failureThreshold : {{ readinessFailureThreshold }}
+          {%- endif %}
+          ### volume mounts
+          volumeMounts:
+          {%- for volume in volumes %}
+          - name: {{ volume.name }}
+            mountPath: {{ volume.mount }}
+          {%- endfor %}
+          {%- for userDefVar in userDefVars %}
+          - name: {{ userDefVar.vol }}
+            mountPath: {{ userDefVar.mount }}
+            {%- if userDefVar.key != '' %}
+            subPath: {{ userDefVar.key }}
+            {%- endif %}
+          {%- endfor %}
+          {%- for storage in storages %}
+          - name: {{ storage.name }}
+            mountPath: {{ storage.mount }}
+          {%- endfor %}
+        ### volumes
+        volumes:
+        {%- for volume in volumes %}
+        - name: {{ volume.name }}
+          persistentVolumeClaim:
+            claimName: {{ volume.name }}
+        {%- endfor %}
+        {%- for userDefVar in userDefVars %}
+        - name: {{ userDefVar.vol }}
+          configMap:
+            name: {{ userDefVar.name }}
+        {%- endfor %}
+        initContainers:
+        - image: alpine:3.6
+          command: ["/sbin/sysctl", "-w", "vm.max_map_count=262144"]
+          name: elasticsearch-logging-init
+          securityContext:
+            privileged: true
+    ### storage class
+    volumeClaimTemplates:
+    {%- for storage in storages %}
+    - metadata:
+        name: {{ storage.name }}
+      spec:
+        storageClassName: {{ storage.storageClass }}
+        accessModes:
+        - {{ storage.accessMode }}
+        resources:
+          requests:
+            storage: {{ storage.capacity }}
+    {%- endfor %}
