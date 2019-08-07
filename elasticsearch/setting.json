@@ -1,0 +1,20 @@
+{
+	"settings" : {
+		"number_of_shards" : 1
+	},
+	"mappings": {
+		"data": {
+			"properties" : {	
+				"pi1" : { "type" : "double", "store" : "yes" },
+				"pi2" : { "type" : "double", "store" : "yes" },
+				"pi3" : { "type" : "double", "store" : "yes" },
+				"presure" : { "type" : "double", "store" : "yes" },
+				"voltage" : { "type" : "double", "store" : "yes" },
+				"temp" : { "type" : "double", "store" : "yes"},
+				"vibrate" : { "type" : "double", "store" : "yes"},
+				"humidity" : { "type" : "double", "store" : "yes"}
+			}
+		}
+	}
+}
+
