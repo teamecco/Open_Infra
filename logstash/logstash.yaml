@@ -36,7 +36,7 @@ items:
         containers:
         ##### app container (don't change name) #####
         - name: app
-          image: docker.elastic.co/logstash/logstash:6.3.2
+          image: rndlr96/logstash-rabbitmq:v1
           imagePullPolicy: Always
           ### command and args
           command: [{%- if commands|length == 0 %}{%- endif %}{%- for command in commands %}"{{ command }}"{{ "," if not loop.last }}{%- endfor %}]
