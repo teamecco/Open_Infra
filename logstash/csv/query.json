@@ -1,0 +1,8 @@
+{
+  "query": {
+    "match_all": { }
+  },
+  "_source": ["pi1", "pi2", "pi3", "temp", "humidity", "presure", "vibrate", "voltage"],
+  "from": 0,
+  "size": 5
+}

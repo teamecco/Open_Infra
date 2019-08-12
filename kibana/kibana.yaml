@@ -1,12 +1,13 @@
-Version: v1
+apiVersion: v1
 kind: List
 items:
 - apiVersion: apps/v1beta1
-  kind: StatefulSet
+  kind: Deployment
   metadata:
     ### application and namespace name
     name: {{ appName }}
     namespace: {{ projectName }}
+    ### labels
     labels:
     {%- for label in labels %}
       {{ label.key }}: {{ label.value }}
@@ -17,9 +18,9 @@ items:
     selector:
       matchLabels:
         task: {{ appName }}
-    updateStrategy:
+    strategy:
       type: {{ updateStrategy }}
-    serviceName: {{ appName }}
+    minReadySeconds: 10
     template:
       metadata:
         labels:
@@ -35,7 +36,7 @@ items:
         containers:
         ##### app container (don't change name) #####
         - name: app
-          image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.3.2
+          image: docker.elastic.co/kibana/kibana-oss:6.3.2
           imagePullPolicy: Always
           ### command and args
           command: [{%- if commands|length == 0 %}{%- endif %}{%- for command in commands %}"{{ command }}"{{ "," if not loop.last }}{%- endfor %}]
@@ -43,11 +44,8 @@ items:
           ### ports
           ports:
           {%- if containerPorts|length == 0 %}
-          - name: db
-            containerPort: 9200
-            protocol: TCP
-          - name: transport
-            containerPort: 9300
+          - name: http-port
+            containerPort: 5601
             protocol: TCP
           {%- endif %}
           {%- for port in containerPorts %}
@@ -146,10 +144,6 @@ items:
             subPath: {{ userDefVar.key }}
             {%- endif %}
           {%- endfor %}
-          {%- for storage in storages %}
-          - name: {{ storage.name }}
-            mountPath: {{ storage.mount }}
-          {%- endfor %}
         ### volumes
         volumes:
         {%- for volume in volumes %}
@@ -162,27 +156,3 @@ items:
           configMap:
             name: {{ userDefVar.name }}
         {%- endfor %}
-        initContainers:
-        - image: alpine:3.6
-          command: ["/sbin/sysctl", "-w", "vm.max_map_count=262144"]
-          name: elasticsearch-logging-init
-          securityContext:
-            privileged: true
-        - image: busybox
-          command: ["sh", "-c", "chown -R 1000:1000 /data
-          name: elasticsearch-volumn-init
-          securityContext:
-            privileged: true
-    ### storage class
-    volumeClaimTemplates:
-    {%- for storage in storages %}
-    - metadata:
-        name: {{ storage.name }}
-      spec:
-        storageClassName: {{ storage.storageClass }}
-        accessModes:
-        - {{ storage.accessMode }}
-        resources:
-          requests:
-            storage: {{ storage.capacity }}
-    {%- endfor %}
