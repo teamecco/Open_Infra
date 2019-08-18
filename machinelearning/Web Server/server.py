@@ -68,9 +68,9 @@ def index():
         dict = sess.run(hypothesis, feed_dict={X: x_data})
         print(dict[0])
         if dict[0] > 0.5:
-            return render_template('index.html',status = "고장")
-        if dict[0] <= 0.5:
             return render_template('index.html',status = "정상")
+        if dict[0] <= 0.5:
+            return render_template('index.html',status = "고장")
 
 if __name__ == '__main__':
     app.run(debug=True)
