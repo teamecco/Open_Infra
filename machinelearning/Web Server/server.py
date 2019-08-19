@@ -4,6 +4,8 @@ from flask import Flask, render_template, request
 
 import datetime
 import tensorflow as tf
+import pandas as pd
+from sklearn import preprocessing
 import numpy as np
 
 app = Flask(__name__)
@@ -36,12 +38,35 @@ def index():
         temperature = float(request.form['temperature'])
         humidity = float(request.form['humidity'])
 
+        train1_csv = pd.read_csv("../data/positive_train.csv")
+        temp1_csv = train1_csv
+        train2_csv = pd.read_csv("../data/negative_train.csv")
+        temp2_csv = train2_csv
+
+        train_csv = pd.concat([train1_csv,train2_csv], sort=False)
+        train_csv["pi"] = train_csv["pi"].astype(float)
+        train_csv["cpu"] = train_csv["cpu"].astype(float)
+        train_csv["ram"] = train_csv["ram"].astype(float)
+        train_csv["temp"] = train_csv["temp"].astype(float)
+        train_csv["humidity"] = train_csv["humidity"].astype(float)
+
+
+
+
         label = 0
-        data = ((machine_temp, cpu_usage, ram_usage, temperature, humidity),(0,0,0,0,0))
+        input = pd.Series([machine_temp, cpu_usage, ram_usage, temperature, humidity], index = ['pi','cpu','ram','temp','humidity'])
+        train_csv = train_csv.append(input, ignore_index=True)
+
+        std_scaler = preprocessing.StandardScaler().fit(train_csv[["pi","cpu","ram","temp","humidity"]])
+        train_std = std_scaler.transform(train_csv[["pi","cpu","ram","temp","humidity"]])
+
+
+        data = ((train_std[-1][0],train_std[-1][1],train_std[-1][2],train_std[-1][3],train_std[-1][4]),(0,0,0,0,0))
         arr = np.array(data, dtype=np.float32)
 
         x_data = arr[0:5]
         dict = sess.run(hypothesis, feed_dict={X: x_data})
+        print(dict[0])
         if dict[0] > 0.5:
             return render_template('index.html',status = "정상")
         if dict[0] <= 0.5:
