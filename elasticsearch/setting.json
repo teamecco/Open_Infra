@@ -1,13 +1,25 @@
 {
 	"settings" : {
-		"number_of_shards" : 1
+		"number_of_shards" : 10,
+		"number_of_replicas" : "1",
+		"refresh_interval" : "2s",
+		"store.type" : "memory"
 	},
 	"mappings": {
 		"data": {
+			"_source": {
+				"enabled" : true
+			},
 			"properties" : {	
-				"pi1" : { "type" : "double", "store" : "yes" },
-				"pi2" : { "type" : "double", "store" : "yes" },
-				"pi3" : { "type" : "double", "store" : "yes" },
+				"pi1_temp" : { "type" : "double", "store" : "yes" },
+				"pi1_cpu" : { "type" : "double", "store" : "yes" },
+				"pi1_ram" : { "type" : "double", "store" : "yes" },
+				"pi2_temp" : { "type" : "double", "store" : "yes" },
+				"pi2_cpu" : { "type" : "double", "store" : "yes" },
+				"pi2_ram" : { "type" : "double", "store" : "yes" },
+				"pi3_temp" : { "type" : "double", "store" : "yes" },
+				"pi3_cpu" : { "type" : "double", "store" : "yes" },
+				"pi3_ram" : { "type" : "double", "store" : "yes" },
 				"presure" : { "type" : "double", "store" : "yes" },
 				"voltage" : { "type" : "double", "store" : "yes" },
 				"temp" : { "type" : "double", "store" : "yes"},
