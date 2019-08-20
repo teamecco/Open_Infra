@@ -3,9 +3,9 @@ import pandas as pd
 from sklearn import preprocessing
 tf.set_random_seed(777)  # for reproducibility
 
-train1_csv = pd.read_csv("../data/negative_train.csv")
+train1_csv = pd.read_csv("/nfs/data/negative_train.csv")
 temp1_csv = train1_csv
-train2_csv = pd.read_csv("../data/positive_train.csv")
+train2_csv = pd.read_csv("/nfs/data/positive_train.csv")
 temp2_csv = train2_csv
 
 train_csv = pd.concat([train1_csv,train2_csv], sort=False)
@@ -58,4 +58,7 @@ with tf.Session() as sess:
                        feed_dict={X: x_data, Y: y_data})
     print("\nHypothesis: ", h, "\nCorrect (Y): ", c, "\nAccuracy: ", a)
     saver = tf.train.Saver()
-    save_path = saver.save(sess, "./model/saved.cpkt")
+    save_path = saver.save(sess, "/nfs/model/saved.cpkt")
+    builder = tf.saved_model.builder.SavedModelBuilder("/nfs/model/trained_model")
+    builder.add_meta_graph_and_variables(sess,["serve"])
+    builder.save()
