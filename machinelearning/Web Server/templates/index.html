@@ -306,17 +306,17 @@
 
                   <!-- Default input -->
                   <div class="form-group">
-                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">기기 온도</label>
+                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">중앙서버 기기 온도</label>
                       <input style="font-family: 'Nanum Barun Gothic'" type="text" name="machine_temp" class="form-control" id="formGroupExampleInput" placeholder="기기 온도를 입력하세요.">
                   </div>
                   <!-- Default input -->
                   <div class="form-group">
-                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">CPU 사용량</label>
+                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">중앙서버 CPU 사용량</label>
                       <input style="font-family: 'Nanum Barun Gothic'" type="text" name="cpu_usage" class="form-control" id="formGroupExampleInput" placeholder="CPU 사용량을 입력하세요.">
                   </div>
                   <!-- Default input -->
                   <div class="form-group">
-                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">램 사용량</label>
+                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">중앙서버 램 사용량</label>
                       <input style="font-family: 'Nanum Barun Gothic'" type="text" name="ram_usage" class="form-control" id="formGroupExampleInput" placeholder="RAM 사용량을 입력하세요.">
                   </div>
                   <!-- Default input -->
@@ -328,6 +328,18 @@
                   <div class="form-group">
                       <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">공장 내 습도</label>
                       <input style="font-family: 'Nanum Barun Gothic'" type="text" name="humidity" class="form-control" id="formGroupExampleInput" placeholder="공장 내 습도를 입력하세요.">
+                  </div>
+                  <div class="form-group">
+                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">기기 진동</label>
+                      <input style="font-family: 'Nanum Barun Gothic'" type="text" name="vibrate" class="form-control" id="formGroupExampleInput" placeholder="공장 내 습도를 입력하세요.">
+                  </div>
+                  <div class="form-group">
+                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">기기 전압</label>
+                      <input style="font-family: 'Nanum Barun Gothic'" type="text" name="voltage" class="form-control" id="formGroupExampleInput" placeholder="공장 내 습도를 입력하세요.">
+                  </div>
+                  <div class="form-group">
+                      <label style="font-family: 'Nanum Barun Gothic'" for="formGroupExampleInput">기기 압력</label>
+                      <input style="font-family: 'Nanum Barun Gothic'" type="text" name="pressure" class="form-control" id="formGroupExampleInput" placeholder="공장 내 습도를 입력하세요.">
                   </div>
 
               <!-- Default form group -->
@@ -343,7 +355,7 @@
 
             <p class="h5 text-center mb-4" style="font-family: 'Nanum Barun Gothic'">예측 결과</p>
             {% if status %}
-              <h5 class="text-center mt-3">예측된 상태는 {{ status }}입니다.</h5>
+              <h5 class="text-center mt-3">중앙서버 상태는 {{ status }}입니다.<br>기기 상태는 {{ status2 }}입니다.</h5>
             {% endif %}
           </div>
           <!--/Grid column-->
