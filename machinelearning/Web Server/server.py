@@ -6,7 +6,7 @@ import tensorflow as tf
 import pandas as pd
 from sklearn import preprocessing
 import numpy as np
-
+import sys
 #import for rabbitmq consuming
 import pika
 import queue
@@ -24,7 +24,7 @@ class Threaded_consumer(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
-        
+
         self.HOST = '106.10.38.29'
         self.PORT = 5672
         self.Virtual_Host = '/'
@@ -44,25 +44,21 @@ td.setDaemon(True)
 td.start()
 
 
-#=====================================================================================================        
+#=====================================================================================================
 
 app = Flask(__name__)
 
-X = tf.placeholder(tf.float32, shape=[None,5])
-Y = tf.placeholder(tf.float32, shape=[None,1])
-W = tf.Variable(tf.random_normal([5,1]), name="weight")
-b = tf.Variable(tf.random_normal([1]), name="bias")
+X1 = tf.placeholder(tf.float32, shape=[None,5])
+Y1 = tf.placeholder(tf.float32, shape=[None,1])
 
 X2 = tf.placeholder(tf.float32, shape=[None,3])
 Y2 = tf.placeholder(tf.float32, shape=[None,1])
-W2 = tf.Variable(tf.random_normal([3,1]), name="weight")
-b2 = tf.Variable(tf.random_normal([1]), name="bias")
 
-hypothesis = tf.sigmoid(tf.matmul(X,W) + b)
-hypothesis2 = tf.sigmoid(tf.matmul(X2,W2) + b2)
 
-saver = tf.train.Saver()
-saver2 = tf.train.Saver()
+model = tf.global_variables_initializer()
+
+serverweight = "./model/server.txt"
+machineweight = "./model/machine.txt"
 
 model = tf.global_variables_initializer()
 
@@ -71,11 +67,42 @@ sess.run(model)
 sess2 = tf.Session()
 sess2.run(model)
 
-save_path = "./model/saved.cpkt"
-saver.restore(sess,save_path)
+f = open(serverweight)
+weight = np.ones((5,1))
 
-save_path2 = "./model2/saved.cpkt"
-saver2.restore(sess2,save_path2)
+for a in range(0,5):
+    line = f.readline()
+    line = float(line)
+    weight[a] = line
+line = f.readline()
+bias = (float(line))
+f.close()
+
+f2 = open(machineweight)
+m_weight = np.ones((3,1))
+
+for x in range(0,3):
+    temp = f2.readline()
+    temp = float(temp)
+    m_weight[x] = temp
+temp = f2.readline()
+m_bias = (float(temp))
+f2.close()
+
+W1 = tf.Variable(weight, dtype=tf.float32)
+b1 = tf.Variable(bias, dtype=tf.float32)
+W2 = tf.Variable(m_weight, dtype=tf.float32)
+b2 = tf.Variable(m_bias, dtype=tf.float32)
+
+hypothesis = tf.sigmoid(tf.matmul(X1,W1) + b1)
+hypothesis2 = tf.sigmoid(tf.matmul(X2,W2) + b2)
+
+sess = tf.Session()
+model = tf.global_variables_initializer()
+sess.run(model)
+
+sess2 = tf.Session()
+sess2.run(model)
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -119,7 +146,7 @@ def index():
         train_std = std_scaler.transform(train_csv[["pi","cpu","ram","temp","humidity"]])
 
         machine_std_scaler = preprocessing.StandardScaler().fit(machine_train_csv[["vibrate","voltage","pressure"]])
-        machine_train_std = std_scaler.transform(machine_train_csv[["vibrate","voltage","pressure"]])
+        machine_train_std = machine_std_scaler.transform(machine_train_csv[["vibrate","voltage","pressure"]])
 
         data = ((train_std[-1][0],train_std[-1][1],train_std[-1][2],train_std[-1][3],train_std[-1][4]),(0,0,0,0,0))
         machine_data = ((train_std[-1][0],train_std[-1][1],train_std[-1][2]),(0,0,0))
@@ -127,9 +154,9 @@ def index():
         machine_arr = np.array(machine_data, dtype=np.float32)
 
         x_data = arr[0:5]
-        machine_x_data = arr[0:3]
+        machine_x_data = machine_arr[0:3]
 
-        dict = sess.run(hypothesis, feed_dict={X: x_data})
+        dict = sess.run(hypothesis, feed_dict={X1: x_data})
         dict2 = sess2.run(hypothesis, feed_dict={X2: machine_x_data})
         print(dict[0])
         if dict[0] > 0.5:
