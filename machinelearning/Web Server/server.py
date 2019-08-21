@@ -1,12 +1,50 @@
 # _*_ coding: utf-8 _*_
 
 from flask import Flask, render_template, request
-
 import datetime
 import tensorflow as tf
 import pandas as pd
 from sklearn import preprocessing
 import numpy as np
+
+#import for rabbitmq consuming
+import pika
+import queue
+import threading
+import json
+
+#==========================================consumer code=============================================
+
+q = queue.Queue() # store IoT data from rabbitmq(raspberry pi)
+
+class Threaded_consumer(threading.Thread):
+    def callback(self, ch, method, properties, body):
+        q.put(body)
+        print(q.get())
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+        
+        self.HOST = '106.10.38.29'
+        self.PORT = 5672
+        self.Virtual_Host = '/'
+        self.credentials = pika.PlainCredentials('admin', 'admin')
+        self.parameters = pika.ConnectionParameters(self.HOST, self.PORT,self.Virtual_Host, self.credentials)
+        self.connection = pika.BlockingConnection(self.parameters)
+        self.channel = self.connection.channel()
+
+        self.channel.basic_consume(on_message_callback=self.callback,queue='sensor', auto_ack=True)
+
+    def run(self):
+        print('start consuming')
+        self.channel.start_consuming()
+
+td = Threaded_consumer()
+td.setDaemon(True)
+td.start()
+
+
+#=====================================================================================================        
 
 app = Flask(__name__)
 
