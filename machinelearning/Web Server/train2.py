@@ -46,7 +46,7 @@ with tf.Session() as sess:
     # Initialize TensorFlow variables
     sess.run(tf.global_variables_initializer())
 
-    for step in range(10001):
+    for step in range(30001):
         cost_val, _ = sess.run([cost, train], feed_dict={X: x_data, Y: y_data})
         if step % 500 == 0:
             print(step, cost_val)
@@ -55,3 +55,16 @@ with tf.Session() as sess:
     h, c, a = sess.run([hypothesis, predicted, accuracy],
                        feed_dict={X: x_data, Y: y_data})
     print("\nHypothesis: ", h, "\nCorrect (Y): ", c, "\nAccuracy: ", a)
+    print("\nWeight : \n",sess.run(W))
+    final_weight = sess.run(W)
+    final_bias = sess.run(b)
+    filepath = "./model/machine.txt"
+    file = open(filepath, 'w', encoding='utf8')
+    for a in range(0,3):
+        line = str(final_weight[a])[1:-1] + "\n"
+        file.write(line)
+    file.write(str(final_bias)[1:-1])
+    file.close()
+
+
+    print("\nBias : \n",sess.run(b))
