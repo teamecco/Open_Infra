@@ -6,7 +6,7 @@ var chart;
  */
 function requestData() {
     $.ajax({
-        url: '/live-cpu',
+        url: '/live-ram',
         success: function(point) {
             var series = chart.series[0],
                 shift = series.data.length > 20; // shift if the series is
@@ -21,6 +21,7 @@ function requestData() {
         cache: false
     });
 }
+
 $(document).ready(function() {
     chart = new Highcharts.Chart({
         chart: {
@@ -31,7 +32,7 @@ $(document).ready(function() {
             }
         },
         title: {
-            text: 'Live CPU data'
+            text: 'Live random data'
         },
         xAxis: {
             type: 'datetime',
@@ -47,7 +48,7 @@ $(document).ready(function() {
             }
         },
         series: [{
-            name: 'CPU data',
+            name: 'Random data',
             data: []
         }]
     });

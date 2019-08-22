@@ -6,12 +6,11 @@ var chart;
  */
 function requestData() {
     $.ajax({
-        url: '/live-cpu',
+        url: '/live-temp',
         success: function(point) {
             var series = chart.series[0],
                 shift = series.data.length > 20; // shift if the series is
                                                  // longer than 20
-
             // add the point
             chart.series[0].addPoint(point, true, shift);
 
@@ -21,6 +20,7 @@ function requestData() {
         cache: false
     });
 }
+
 $(document).ready(function() {
     chart = new Highcharts.Chart({
         chart: {
@@ -31,7 +31,7 @@ $(document).ready(function() {
             }
         },
         title: {
-            text: 'Live CPU data'
+            text: 'Live random data'
         },
         xAxis: {
             type: 'datetime',
@@ -47,7 +47,7 @@ $(document).ready(function() {
             }
         },
         series: [{
-            name: 'CPU data',
+            name: 'Random data',
             data: []
         }]
     });
