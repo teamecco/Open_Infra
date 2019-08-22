@@ -13,16 +13,36 @@ import pika
 import queue
 import threading
 import json
-from consumer import Threaded_consumer  # thread consumer object
-import global_data  # global queue
-
-from inference import Threaded_Inference
 
 #==========================================consumer code=============================================
+
+q = queue.Queue() # store IoT data from rabbitmq(raspberry pi)
+
+class Threaded_consumer(threading.Thread):
+    def callback(self, ch, method, properties, body):
+        q.put(body)
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+        self.HOST = '106.10.38.29'
+        self.PORT = 5672
+        self.Virtual_Host = '/'
+        self.credentials = pika.PlainCredentials('admin', 'admin')
+        self.parameters = pika.ConnectionParameters(self.HOST, self.PORT,self.Virtual_Host, self.credentials)
+        self.connection = pika.BlockingConnection(self.parameters)
+        self.channel = self.connection.channel()
+
+        self.channel.basic_consume(on_message_callback=self.callback,queue='sensor', auto_ack=True)
+
+    def run(self):
+        print('start consuming')
+        self.channel.start_consuming()
 
 td = Threaded_consumer()
 td.setDaemon(True)
 td.start()
+
 
 #=====================================================================================================
 
@@ -104,7 +124,85 @@ machine_train_csv["pressure"] = machine_train_csv["pressure"].astype(float)
 
 #=====================================================================================================
 
-inferece_td = Threaded_Inference(train_csv, machine_train_csv, hypothesis, hypothesis2, X1, X2, sess, sess2)
+class Threaded_Inference(threading.Thread):
+    def __init__(self, train_csv, machine_train_csv):
+        threading.Thread.__init__(self)
+        self.train_csv = train_csv
+        self.machine_train_csv = machine_train_csv
+
+    def run(self):
+        print("start Inference")
+        while True:
+            if not q.empty():
+                self.status = np.zeros((4,), dtype=int)  # [0] = device [1] = pi1 [2] = pi2 [3] = pi3
+                self.val_dict = json.loads(q.get())
+                self.input1 = pd.Series(
+                        [float(self.val_dict['pi1_temp']),
+                        float(self.val_dict['pi1_cpu']),
+                        float(self.val_dict['pi1_ram']/9),
+                        float(self.val_dict['temp']),
+                        float(self.val_dict['humidity'])], 
+                        index = ['pi','cpu','ram','temp','humidity']
+                        )
+                self.input2 = pd.Series(
+                        [float(self.val_dict['pi2_temp']),
+                        float(self.val_dict['pi2_cpu']),
+                        float(self.val_dict['pi2_ram']/9),
+                        float(self.val_dict['temp']),
+                        float(self.val_dict['humidity'])], 
+                        index = ['pi','cpu','ram','temp','humidity']
+                        )
+
+                self.input3 = pd.Series(
+                        [float(self.val_dict['pi3_temp']),
+                        float(self.val_dict['pi3_cpu']),
+                        float(self.val_dict['pi3_ram']/9),
+                        float(self.val_dict['temp']),
+                        float(self.val_dict['humidity'])], 
+                        index = ['pi','cpu','ram','temp','humidity']
+                        )
+
+                self.machine_input = pd.Series(
+                        [float(self.val_dict['vibrate']),
+                        float(self.val_dict['voltage']),
+                        float(self.val_dict['presure'])],
+                        index = ['vibrate','voltage','pressure']
+                        )
+
+                self.train_csv = self.train_csv.append(self.input1, ignore_index=True)
+                self.train_csv = self.train_csv.append(self.input2, ignore_index=True)
+                self.train_csv = self.train_csv.append(self.input3, ignore_index=True)
+
+                self.machine_train_csv = self.machine_train_csv.append(self.machine_input, ignore_index=True)
+                self.machine_std_scaler = preprocessing.StandardScaler().fit(self.machine_train_csv[["vibrate","voltage","pressure"]])
+                self.machine_train_std =self.machine_std_scaler.transform(self.machine_train_csv[["vibrate","voltage","pressure"]])
+                self.machine_data = ((self.machine_train_std[-1][0],self.machine_train_std[-1][1],self.machine_train_std[-1][2]),(0,0,0))
+                self.machine_arr = np.array(self.machine_data, dtype=np.float32)
+                self.machine_x_data = self.machine_arr[0:3]
+                self.dict2 = sess2.run(hypothesis2, feed_dict={X2:self.machine_x_data})
+                if self.dict2[0] > 0.5:
+                    self.status[0] = 1
+
+                self.count = 0
+                while self.count < 3 :
+                    self.std_scaler = preprocessing.StandardScaler().fit(self.train_csv[["pi","cpu","ram","temp","humidity"]])
+                    self.train_std = self.std_scaler.transform(self.train_csv[["pi","cpu","ram","temp","humidity"]])
+                    self.data = ((self.train_std[self.count-3][0],
+                                self.train_std[self.count-3][1],
+                                self.train_std[self.count-3][2],
+                                self.train_std[self.count-3][3],
+                                self.train_std[self.count-3][4]),(0,0,0,0,0)
+                            )
+            
+                    self.arr = np.array(self.data, dtype=np.float32)
+
+                    self.x_data = self.arr[0:5]
+                    self.dict = sess.run(hypothesis, feed_dict={X1: self.x_data})
+                    if self.dict[0] > 0.5:
+                        self.status[self.count+1] = 1
+                    self.count = self.count + 1
+
+inferece_td = Threaded_Inference(train_csv, machine_train_csv)
 inferece_td.setDaemon(True)
 inferece_td.start()
 
