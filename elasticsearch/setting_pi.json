@@ -1,0 +1,14 @@
+{
+	"mappings": {
+		"pi":{
+			"properties" : {
+				"pi_temp" : { "type" : "double", "store" : "true" },
+				"pi_cpu" : { "type" : "double", "store" : "true" },
+				"pi_ram" : { "type" : "double", "store" : "true" },
+				"pi_status" : { "type" : "integer", "store" : "true" },
+				"@timestamp" : {"type" : "date", "store" : "true"}
+			}
+		}
+	}
+}
+

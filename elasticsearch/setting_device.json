@@ -1,0 +1,14 @@
+{
+	"mappings": {
+		"device":{
+			"properties" : {
+				"presure" : { "type" : "double", "store" : "true" },
+				"vibrate" : { "type" : "double", "store" : "true" },
+				"voltage" : { "type" : "double", "store" : "true" },
+				"status" : { "type" : "integer", "store" : "true" },
+				"@timestamp" : { "type" : "date", "store" : "true"}
+			}
+		}
+	}
+}
+
