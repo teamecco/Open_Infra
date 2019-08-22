@@ -7,6 +7,7 @@ import numpy as np
 import json
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
+import datetime
 
 class Threaded_Inference(threading.Thread):
     def __init__(self, train_csv, machine_train_csv, hypothesis,hypothesis2, X1, X2, sess, sess2):
@@ -92,12 +93,13 @@ class Threaded_Inference(threading.Thread):
                     if self.dict[0] > 0.5:
                         self.status[self.count+1] = 1
                     self.count = self.count + 1
-
+				self.datetime = datetime.datetime.now()
                 self.doc1 = {
                     "pi_temp" : self.val_dict['pi1_temp'], 
                     "pi_cpu" : self.val_dict['pi1_cpu'], 
                     "pi_ram" : self.val_dict['pi1_ram'], 
-                    "pi_status" : int(self.status[1])
+                    "pi_status" : int(self.status[1]),
+					"@timestamp" : self.datetime
                 }
 
                 self.doc2 = {
@@ -105,6 +107,7 @@ class Threaded_Inference(threading.Thread):
                     "pi_cpu" : self.val_dict['pi2_cpu'], 
                     "pi_ram" : self.val_dict['pi2_ram'], 
                     "pi_status" : int(self.status[2])
+					"@timestamp" : self.datetime
                 }
 
                 self.doc3 = {
@@ -112,12 +115,14 @@ class Threaded_Inference(threading.Thread):
                     "pi_cpu" : self.val_dict['pi3_cpu'], 
                     "pi_ram" : self.val_dict['pi3_ram'], 
                     "pi_status" : int(self.status[3])
+					"@timestamp" : self.datetime
                 }
                 self.doc4 = {
                     "presure" : self.val_dict['presure'], 
                     "vibrate" : self.val_dict['vibrate'], 
                     "voltage" : self.val_dict['voltage'], 
                     "status" : int(self.status[0])
+					"@timestamp" : self.datetime
                 }
 
                 self.es.index(index='pi1', doc_type='pi', body=self.doc1)
