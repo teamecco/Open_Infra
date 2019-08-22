@@ -5,10 +5,11 @@ import pandas as pd
 from sklearn import preprocessing
 import numpy as np
 import json
+from elasticsearch import Elasticsearch
+from elasticsearch import helpers
 
 class Threaded_Inference(threading.Thread):
-    def __init__(self, train_csv, machine_train_csv, hypothesis,hypothesis2,
-            X1, X2, sess, sess2):
+    def __init__(self, train_csv, machine_train_csv, hypothesis,hypothesis2, X1, X2, sess, sess2):
         threading.Thread.__init__(self)
         self.train_csv = train_csv
         self.machine_train_csv = machine_train_csv
@@ -18,6 +19,7 @@ class Threaded_Inference(threading.Thread):
         self.X2 = X2
         self.sess = sess
         self.sess2 = sess2
+        self.es = Elasticsearch("http://106.10.51.176:31032/")
 
     def run(self):
         print("start Inference")
@@ -25,7 +27,6 @@ class Threaded_Inference(threading.Thread):
             if not global_data.q.empty():
                 self.status = np.zeros((4,), dtype=int)  # [0] = device [1] = pi1 [2] = pi2 [3] = pi3
                 self.val_dict = json.loads(global_data.q.get())
-                print(self.val_dict)
                 self.input1 = pd.Series(
                         [float(self.val_dict['pi1_temp']),
                         float(self.val_dict['pi1_cpu']),
@@ -92,4 +93,34 @@ class Threaded_Inference(threading.Thread):
                         self.status[self.count+1] = 1
                     self.count = self.count + 1
 
-                print(self.status)
+                self.doc1 = {
+                    "pi_temp" : self.val_dict['pi1_temp'], 
+                    "pi_cpu" : self.val_dict['pi1_cpu'], 
+                    "pi_ram" : self.val_dict['pi1_ram'], 
+                    "pi_status" : int(self.status[1])
+                }
+
+                self.doc2 = {
+                    "pi_temp" : self.val_dict['pi2_temp'], 
+                    "pi_cpu" : self.val_dict['pi2_cpu'], 
+                    "pi_ram" : self.val_dict['pi2_ram'], 
+                    "pi_status" : int(self.status[2])
+                }
+
+                self.doc3 = {
+                    "pi_temp" : self.val_dict['pi3_temp'], 
+                    "pi_cpu" : self.val_dict['pi3_cpu'], 
+                    "pi_ram" : self.val_dict['pi3_ram'], 
+                    "pi_status" : int(self.status[3])
+                }
+                self.doc4 = {
+                    "presure" : self.val_dict['presure'], 
+                    "vibrate" : self.val_dict['vibrate'], 
+                    "voltage" : self.val_dict['voltage'], 
+                    "status" : int(self.status[0])
+                }
+
+                self.es.index(index='pi1', doc_type='pi', body=self.doc1)
+                self.es.index(index='pi2', doc_type='pi', body=self.doc2)
+                self.es.index(index='pi3', doc_type='pi', body=self.doc3)
+                self.es.index(index='device', doc_type='device', body=self.doc4)
