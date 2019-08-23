@@ -93,7 +93,7 @@ class Threaded_Inference(threading.Thread):
                     if self.dict[0] > 0.5:
                         self.status[self.count+1] = 1
                     self.count = self.count + 1
-				self.datetime = datetime.datetime.now()
+                self.datetime = datetime.datetime.now()
                 self.doc1 = {
                     "pi_temp" : self.val_dict['pi1_temp'],
                     "pi_cpu" : self.val_dict['pi1_cpu'],
@@ -106,7 +106,7 @@ class Threaded_Inference(threading.Thread):
                     "pi_temp" : self.val_dict['pi2_temp'],
                     "pi_cpu" : self.val_dict['pi2_cpu'],
                     "pi_ram" : self.val_dict['pi2_ram'],
-                    "pi_status" : int(self.status[2])
+                    "pi_status" : int(self.status[2]),
 					"@timestamp" : self.datetime
                 }
 
@@ -114,14 +114,14 @@ class Threaded_Inference(threading.Thread):
                     "pi_temp" : self.val_dict['pi3_temp'],
                     "pi_cpu" : self.val_dict['pi3_cpu'],
                     "pi_ram" : self.val_dict['pi3_ram'],
-                    "pi_status" : int(self.status[3])
+                    "pi_status" : int(self.status[3]),
 					"@timestamp" : self.datetime
                 }
                 self.doc4 = {
                     "presure" : self.val_dict['presure'],
                     "vibrate" : self.val_dict['vibrate'],
                     "voltage" : self.val_dict['voltage'],
-                    "status" : int(self.status[0])
+                    "status" : int(self.status[0]),
 					"@timestamp" : self.datetime
                 }
 
