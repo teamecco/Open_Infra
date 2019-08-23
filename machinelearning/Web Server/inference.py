@@ -20,7 +20,7 @@ class Threaded_Inference(threading.Thread):
         self.X2 = X2
         self.sess = sess
         self.sess2 = sess2
-        self.es = Elasticsearch("http://106.10.51.176:31032/")
+        self.es = Elasticsearch("http://106.10.40.129:31032/")
 
     def run(self):
         print("start Inference")
@@ -74,7 +74,7 @@ class Threaded_Inference(threading.Thread):
                 self.dict2 = self.sess2.run(self.hypothesis2, feed_dict={self.X2:self.machine_x_data})
                 if self.dict2[0] > 0.5:
                     self.status[0] = 1
-                
+
                 self.count = 0
                 while self.count < 3 :
                     self.std_scaler = preprocessing.StandardScaler().fit(self.train_csv[["pi","cpu","ram","temp","humidity"]])
@@ -95,32 +95,32 @@ class Threaded_Inference(threading.Thread):
                     self.count = self.count + 1
 				self.datetime = datetime.datetime.now()
                 self.doc1 = {
-                    "pi_temp" : self.val_dict['pi1_temp'], 
-                    "pi_cpu" : self.val_dict['pi1_cpu'], 
-                    "pi_ram" : self.val_dict['pi1_ram'], 
+                    "pi_temp" : self.val_dict['pi1_temp'],
+                    "pi_cpu" : self.val_dict['pi1_cpu'],
+                    "pi_ram" : self.val_dict['pi1_ram'],
                     "pi_status" : int(self.status[1]),
 					"@timestamp" : self.datetime
                 }
 
                 self.doc2 = {
-                    "pi_temp" : self.val_dict['pi2_temp'], 
-                    "pi_cpu" : self.val_dict['pi2_cpu'], 
-                    "pi_ram" : self.val_dict['pi2_ram'], 
+                    "pi_temp" : self.val_dict['pi2_temp'],
+                    "pi_cpu" : self.val_dict['pi2_cpu'],
+                    "pi_ram" : self.val_dict['pi2_ram'],
                     "pi_status" : int(self.status[2])
 					"@timestamp" : self.datetime
                 }
 
                 self.doc3 = {
-                    "pi_temp" : self.val_dict['pi3_temp'], 
-                    "pi_cpu" : self.val_dict['pi3_cpu'], 
-                    "pi_ram" : self.val_dict['pi3_ram'], 
+                    "pi_temp" : self.val_dict['pi3_temp'],
+                    "pi_cpu" : self.val_dict['pi3_cpu'],
+                    "pi_ram" : self.val_dict['pi3_ram'],
                     "pi_status" : int(self.status[3])
 					"@timestamp" : self.datetime
                 }
                 self.doc4 = {
-                    "presure" : self.val_dict['presure'], 
-                    "vibrate" : self.val_dict['vibrate'], 
-                    "voltage" : self.val_dict['voltage'], 
+                    "presure" : self.val_dict['presure'],
+                    "vibrate" : self.val_dict['vibrate'],
+                    "voltage" : self.val_dict['voltage'],
                     "status" : int(self.status[0])
 					"@timestamp" : self.datetime
                 }

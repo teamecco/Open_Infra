@@ -53,12 +53,12 @@ with tf.Session() as sess:
     for step in range(30001):
         cost_val, _ = sess.run([cost, train], feed_dict={X: x_data, Y: y_data})
         if step % 1000 == 0:
-            print(step, cost_val)
+            print("Step : ",step,"Cost : ",cost_val)
 
     # Accuracy report
     h, c, a = sess.run([hypothesis, predicted, accuracy],
                        feed_dict={X: x_data, Y: y_data})
-    print("\nHypothesis: ", h, "\nCorrect (Y): ", c, "\nAccuracy: ", a)
+    print("\nAccuracy: ", a)
     print("\nWeight : \n",sess.run(W))
     final_weight = sess.run(W)
     final_bias = sess.run(b)
