@@ -1,1 +1,1 @@
-###this code is for geting sensor data from sensor
+### this code is for geting sensor data from sensor
